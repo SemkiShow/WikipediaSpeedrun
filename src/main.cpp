@@ -2,15 +2,15 @@
 //
 // SPDX-License-Identifier: GPL-3.0-only
 
-#include "Extract.hpp"
-#include <iostream>
+#include "UI.hpp"
+#include <QApplication>
 
-int main()
+int main(int argc, char* argv[])
 {
-    std::cout << "Enter the path to the dataset:\n";
-    std::string path;
-    std::cin >> path;
-    ExtractLinks(path);
+    QApplication app(argc, argv);
 
-    return 0;
+    MainWindow window;
+    window.show();
+
+    return app.exec();
 }

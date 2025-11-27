@@ -5,17 +5,18 @@ executable_name=WikipediaSpeedrun
 
 # Compiling for Linux
 cmake -B build_release -DCMAKE_BUILD_TYPE=Release
-cmake --build build_release -j
+cmake --build build_release -j${nproc}
 cp build_release/bin/$executable_name .
 
 # Compiling for Windows
 cmake -B build_release_windows -DCMAKE_TOOLCHAIN_FILE=mingw-w64-x86_64.cmake -DCMAKE_BUILD_TYPE=Release
-cmake --build build_release_windows -j
+cmake --build build_release_windows -j${nproc}
 cp build_release_windows/bin/$executable_name.exe .
+cp build_release_windows/bin/*.dll .
 
 # Zipping the build
-zip release.zip $executable_name $executable_name.exe LICENSE README.md
-rm $executable_name $executable_name.exe
+zip release.zip $executable_name $executable_name.exe *.dll LICENSE README.md
+rm $executable_name $executable_name.exe *.dll
 
 # Creating a GitHub release
 gh release create $1 release.zip
