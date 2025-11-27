@@ -6,6 +6,7 @@
 
 #include <QMainWindow>
 #include <QLabel>
+#include <QPushButton>
 
 class MainWindow : public QMainWindow
 {
@@ -16,4 +17,5 @@ class MainWindow : public QMainWindow
   private:
     QString datasetPath;
     QLabel* datasetLabel;
+    QPushButton* parseDatasetButton;
 };

@@ -4,7 +4,6 @@
 
 #include "Extract.hpp"
 #include "UI.hpp"
-#include <QDebug>
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QLabel>
@@ -38,10 +37,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
                 std::cout << "Selected " << dir.toStdString() << '\n';
                 datasetPath = dir;
                 datasetLabel->setText(datasetPath);
+                parseDatasetButton->setVisible(true);
             });
     datasetLayout->addWidget(datasetButton);
 
-    QPushButton* parseDatasetButton = new QPushButton("Parse dataset");
+    parseDatasetButton = new QPushButton("Parse dataset");
     connect(parseDatasetButton, &QPushButton::clicked, this,
             [this]()
             {
@@ -51,5 +51,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
                     ExtractLinks(datasetPath.toStdString());
                 }
             });
+    parseDatasetButton->setVisible(false);
     layout->addWidget(parseDatasetButton);
 }
