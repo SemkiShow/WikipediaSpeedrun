@@ -5,6 +5,7 @@
 #pragma once
 
 #include <filesystem>
+#include <QStringList>
 #include <unordered_map>
 #include <vector>
 namespace fs = std::filesystem;
@@ -14,6 +15,8 @@ class Finder
   public:
     Finder(const fs::path& parsedDatasetPath = "tmp");
     std::vector<std::string> FindShortestPath(const std::string& start, const std::string& end);
+
+    QStringList nodeLinks;
 
   private:
     fs::path datasetPath;

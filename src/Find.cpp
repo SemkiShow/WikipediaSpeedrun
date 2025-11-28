@@ -12,6 +12,12 @@ Finder::Finder(const fs::path& parsedDatasetPath)
 {
     datasetPath = parsedDatasetPath;
     FindNodes(datasetPath);
+
+    for (auto& link : nodes)
+    {
+        nodeLinks << QString::fromStdString(idNodes[link.first]);
+    }
+    nodeLinks.sort();
 }
 
 void Finder::FindNodes(const fs::path& path)
@@ -70,6 +76,12 @@ void Finder::AddNodes(const std::string& name, const fs::path& path)
 
 std::vector<std::string> Finder::FindShortestPath(const std::string& start, const std::string& end)
 {
+    if (nodeIds.find(start) == nodeIds.end() || nodeIds.find(end) == nodeIds.end())
+    {
+        std::cout << "Either " << start << " or " << end << " is an invalid value!\n";
+        return {"Either start or end is invalid!"};
+    }
+
     std::vector<char> visited(nodeIds.size(), false);
     std::vector<int> parent(nodeIds.size(), -1);
 
@@ -96,7 +108,7 @@ std::vector<std::string> Finder::FindShortestPath(const std::string& start, cons
     if (!visited[nodeIds[end]])
     {
         std::cout << "No path found!\n";
-        return {};
+        return {"No path found!"};
     }
 
     std::vector<std::string> output;

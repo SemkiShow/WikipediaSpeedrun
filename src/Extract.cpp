@@ -7,6 +7,8 @@
 #include <iostream>
 #include <set>
 
+#define MAX_FILENAME 255
+
 void ExtractLinksHTML(const fs::path& filePath, const fs::path& targetPath)
 {
     std::cout << "Extracting links from file " << filePath.string() << '\n';
@@ -48,6 +50,12 @@ void ExtractLinksHTML(const fs::path& filePath, const fs::path& targetPath)
         }
 
         std::string link = (std::string)tag.substr(start, end - start);
+        if (link.size() > MAX_FILENAME)
+        {
+            std::cout << "Skipping link " << link << "because the file name is too long\n";
+            pos = tagEnd;
+            continue;
+        }
         if (fs::exists(filePath.parent_path() / link)) links.insert(link);
 
         pos = tagEnd;
@@ -75,6 +83,12 @@ void ExtractLinks(const fs::path& path, const fs::path& targetPath)
             }
             else
             {
+                if (subpath.path().stem().string().size() > MAX_FILENAME)
+                {
+                    std::cout << "Skipping file " << subpath.path().stem().string().size()
+                              << "because the file name is too long\n";
+                    continue;
+                }
                 ExtractLinksHTML(subpath, targetPath);
             }
         }
