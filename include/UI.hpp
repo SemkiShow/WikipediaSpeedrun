@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Find.hpp"
 #include <QMainWindow>
 #include <QLabel>
 #include <QPushButton>
@@ -18,4 +19,6 @@ class MainWindow : public QMainWindow
     QString datasetPath;
     QLabel* datasetLabel;
     QPushButton* parseDatasetButton;
+    QPushButton* shortestPathButton;
+    Finder finder;
 };

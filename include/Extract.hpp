@@ -5,7 +5,6 @@
 #pragma once
 
 #include <filesystem>
-
 namespace fs = std::filesystem;
 
 void ExtractLinks(const fs::path& path, const fs::path& targetPath = "tmp");

@@ -5,7 +5,7 @@
 #include "Extract.hpp"
 #include <fstream>
 #include <iostream>
-#include <vector>
+#include <set>
 
 void ExtractLinksHTML(const fs::path& filePath, const fs::path& targetPath)
 {
@@ -16,7 +16,7 @@ void ExtractLinksHTML(const fs::path& filePath, const fs::path& targetPath)
         contents += buf;
     inFile.close();
 
-    std::vector<std::string> links;
+    std::set<std::string> links;
     size_t pos = 0;
     while ((pos = contents.find("<a", pos)) != std::string::npos)
     {
@@ -47,8 +47,8 @@ void ExtractLinksHTML(const fs::path& filePath, const fs::path& targetPath)
             continue;
         }
 
-        links.emplace_back(tag.substr(start, end - start));
-        if (!fs::exists(filePath.parent_path() / links.back())) links.pop_back();
+        std::string link = (std::string)tag.substr(start, end - start);
+        if (fs::exists(filePath.parent_path() / link)) links.insert(link);
 
         pos = tagEnd;
     }

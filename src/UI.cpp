@@ -20,9 +20,9 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     setCentralWidget(central);
 
     QVBoxLayout* layout = new QVBoxLayout(central);
+    layout->setAlignment(Qt::AlignTop);
 
     QHBoxLayout* datasetLayout = new QHBoxLayout();
-    datasetLayout->setAlignment(Qt::AlignTop);
     layout->addLayout(datasetLayout);
 
     datasetLabel = new QLabel("No dataset selected!");
@@ -41,6 +41,11 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
             });
     datasetLayout->addWidget(datasetButton);
 
+    QFrame* separator = new QFrame();
+    separator->setFrameShape(QFrame::HLine);
+    separator->setFrameShadow(QFrame::Sunken);
+    layout->addWidget(separator);
+
     parseDatasetButton = new QPushButton("Parse dataset");
     connect(parseDatasetButton, &QPushButton::clicked, this,
             [this]()
@@ -49,8 +54,24 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
                 {
                     if (fs::exists("tmp")) fs::remove_all("tmp");
                     ExtractLinks(datasetPath.toStdString());
+                    finder = {};
+                    shortestPathButton->setVisible(true);
                 }
             });
     parseDatasetButton->setVisible(false);
     layout->addWidget(parseDatasetButton);
+
+    shortestPathButton = new QPushButton("Find shortest path");
+    connect(shortestPathButton, &QPushButton::clicked, this,
+            [this]()
+            {
+                const auto& shortestPath = finder.FindShortestPath("Bat", "Human");
+                for (auto& link: shortestPath)
+                {
+                    std::cout << link << ' ';
+                }
+                std::cout << '\n';
+            });
+    shortestPathButton->setVisible(fs::exists("tmp"));
+    layout->addWidget(shortestPathButton);
 }
