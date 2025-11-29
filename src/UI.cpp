@@ -4,37 +4,12 @@
 
 #include "Extract.hpp"
 #include "UI.hpp"
-#include <QComboBox>
-#include <QCompleter>
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPushButton>
 #include <QVBoxLayout>
 #include <iostream>
-
-class ComboWidget : public QWidget
-{
-  public:
-    QComboBox* combo;
-
-    ComboWidget(QString name, QStringList comboItems = {})
-    {
-        QHBoxLayout* layout = new QHBoxLayout(this);
-
-        QLabel* label = new QLabel(name);
-        layout->addWidget(label);
-
-        QCompleter* completer = new QCompleter(comboItems);
-        completer->setCaseSensitivity(Qt::CaseInsensitive);
-
-        combo = new QComboBox();
-        combo->addItems(comboItems);
-        combo->setEditable(true);
-        combo->setCompleter(completer);
-        layout->addWidget(combo);
-    }
-};
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
@@ -45,14 +20,18 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     setCentralWidget(central);
 
     QVBoxLayout* layout = new QVBoxLayout(central);
-    layout->setAlignment(Qt::AlignTop);
+    // layout->setAlignment(Qt::AlignTop);
 
-    QHBoxLayout* datasetLayout = new QHBoxLayout();
+    QVBoxLayout* datasetLayout = new QVBoxLayout();
+    datasetLayout->setAlignment(Qt::AlignTop);
     layout->addLayout(datasetLayout);
+
+    QHBoxLayout* datasetSelectionLayout = new QHBoxLayout();
+    datasetLayout->addLayout(datasetSelectionLayout);
 
     datasetLabel =
         new QLabel(fs::exists("tmp") ? "A parsed dataset at tmp exists" : "No dataset selected!");
-    datasetLayout->addWidget(datasetLabel);
+    datasetSelectionLayout->addWidget(datasetLabel);
 
     QPushButton* datasetButton = new QPushButton("Select dataset folder");
     connect(datasetButton, &QPushButton::clicked, this,
@@ -65,7 +44,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
                 datasetLabel->setText(datasetPath);
                 parseDatasetButton->setVisible(true);
             });
-    datasetLayout->addWidget(datasetButton);
+    datasetSelectionLayout->addWidget(datasetButton);
 
     parseDatasetButton = new QPushButton("Parse dataset");
     connect(parseDatasetButton, &QPushButton::clicked, this,
@@ -76,30 +55,37 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
                     if (fs::exists("tmp")) fs::remove_all("tmp");
                     ExtractLinks(datasetPath.toStdString());
                     finder = {};
-                    shortestPathButton->setVisible(true);
+                    startCombo->UpdateItems(finder.nodeLinks);
+                    endCombo->UpdateItems(finder.nodeLinks);
                     parseDatasetButton->setVisible(false);
+                    findLayoutWidget->setVisible(true);
                 }
             });
     parseDatasetButton->setVisible(false);
-    layout->addWidget(parseDatasetButton);
+    datasetLayout->addWidget(parseDatasetButton);
+
+    findLayoutWidget = new QWidget();
+    findLayoutWidget->setVisible(fs::exists("tmp"));
+    layout->addWidget(findLayoutWidget);
+    QVBoxLayout* findLayout = new QVBoxLayout(findLayoutWidget);
 
     QFrame* separator = new QFrame();
     separator->setFrameShape(QFrame::HLine);
     separator->setFrameShadow(QFrame::Sunken);
-    layout->addWidget(separator);
+    findLayout->addWidget(separator);
 
-    ComboWidget* startCombo = new ComboWidget("start page", finder.nodeLinks);
-    layout->addWidget(startCombo);
+    startCombo = new ComboWidget("start page", finder.nodeLinks);
+    findLayout->addWidget(startCombo);
 
-    ComboWidget* endCombo = new ComboWidget("end page", finder.nodeLinks);
-    layout->addWidget(endCombo);
+    endCombo = new ComboWidget("end page", finder.nodeLinks);
+    findLayout->addWidget(endCombo);
 
     QLabel* pathLabel = new QLabel();
-    layout->addWidget(pathLabel);
+    findLayout->addWidget(pathLabel);
 
-    shortestPathButton = new QPushButton("Find shortest path");
+    QPushButton* shortestPathButton = new QPushButton("Find shortest path");
     connect(shortestPathButton, &QPushButton::clicked, this,
-            [this, startCombo, endCombo, pathLabel]()
+            [this, pathLabel]()
             {
                 const auto& shortestPath =
                     finder.FindShortestPath(startCombo->combo->currentText().toStdString(),
@@ -116,6 +102,5 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 
                 pathLabel->setText(pathString);
             });
-    shortestPathButton->setVisible(fs::exists("tmp"));
-    layout->addWidget(shortestPathButton);
+    findLayout->addWidget(shortestPathButton);
 }
