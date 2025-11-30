@@ -6,39 +6,10 @@
 #include "Extract.hpp"
 #include "UI.hpp"
 #include <QFileDialog>
-#include <QHBoxLayout>
 #include <QLabel>
-#include <QProgressBar>
 #include <QPushButton>
 #include <QThread>
-#include <QVBoxLayout>
 #include <iostream>
-
-class ProgressWidget : public QWidget
-{
-  private:
-    QProgressBar* progress;
-    QLabel* label;
-
-  public:
-    ProgressWidget(const QString& name = "")
-    {
-        QVBoxLayout* layout = new QVBoxLayout(this);
-
-        progress = new QProgressBar();
-        layout->addWidget(progress);
-
-        label = new QLabel(name);
-        label->setMaximumWidth(750);
-        layout->addWidget(label);
-    }
-
-    void SetLabel(const QString& name) { label->setText(name); }
-
-    void IncreaseValue(int delta = 1) { progress->setValue(progress->value() + delta); }
-
-    void SetMax(int value) { progress->setMaximum(value); }
-};
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
@@ -145,6 +116,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
                     worker->progressMax(amount / DROP_COUNT);
 
                     finder.BuildNodes(worker);
+
+                    worker->progress("Adding nodes");
                 };
 
                 auto onProgress = [graphProgressBar](const QString& message)

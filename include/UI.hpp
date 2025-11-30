@@ -10,7 +10,9 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QMainWindow>
+#include <QProgressBar>
 #include <QPushButton>
+#include <QVBoxLayout>
 
 class ComboWidget : public QWidget
 {
@@ -46,6 +48,32 @@ class ComboWidget : public QWidget
     }
 
     QString GetText() { return combo->currentText(); }
+};
+
+class ProgressWidget : public QWidget
+{
+  private:
+    QProgressBar* progress;
+    QLabel* label;
+
+  public:
+    ProgressWidget(const QString& name = "")
+    {
+        QVBoxLayout* layout = new QVBoxLayout(this);
+
+        progress = new QProgressBar();
+        layout->addWidget(progress);
+
+        label = new QLabel(name);
+        label->setMaximumWidth(750);
+        layout->addWidget(label);
+    }
+
+    void SetLabel(const QString& name) { label->setText(name); }
+
+    void IncreaseValue(int delta = 1) { progress->setValue(progress->value() + delta); }
+
+    void SetMax(int value) { progress->setMaximum(value); }
 };
 
 class MainWindow : public QMainWindow
