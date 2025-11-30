@@ -7,8 +7,6 @@
 #include <QObject>
 #include <functional>
 
-#define DROP_COUNT 100
-
 class Worker : public QObject
 {
     Q_OBJECT

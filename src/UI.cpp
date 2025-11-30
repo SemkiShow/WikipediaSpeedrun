@@ -2,6 +2,7 @@
 //
 // SPDX-License-Identifier: GPL-3.0-only
 
+#include "Constants.hpp"
 #include "Extract.hpp"
 #include "UI.hpp"
 #include <QFileDialog>
@@ -56,8 +57,8 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     QHBoxLayout* datasetSelectionLayout = new QHBoxLayout();
     datasetLayout->addLayout(datasetSelectionLayout);
 
-    datasetLabel =
-        new QLabel(fs::exists("tmp") ? "A parsed dataset at tmp exists" : "No dataset selected!");
+    datasetLabel = new QLabel(fs::exists(TMP_PATH) ? QString("A parsed dataset at ") + TMP_PATH + " exists"
+                                                   : "No dataset selected!");
     datasetSelectionLayout->addWidget(datasetLabel);
 
     QPushButton* datasetButton = new QPushButton("Select dataset folder");
@@ -89,7 +90,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
                 auto task = [this](Worker* worker)
                 {
                     worker->progress("Getting the files amount");
-                    if (fs::exists("tmp")) fs::remove_all("tmp");
+                    if (fs::exists(TMP_PATH)) fs::remove_all(TMP_PATH);
                     size_t amount = GetFilesAmount(datasetPath.toStdString());
                     worker->progressMax(amount / DROP_COUNT);
 
@@ -117,7 +118,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     datasetLayout->addWidget(parseDatasetButton);
 
     findLayoutWidget = new QWidget();
-    findLayoutWidget->setVisible(fs::exists("tmp"));
+    findLayoutWidget->setVisible(fs::exists(TMP_PATH));
     layout->addWidget(findLayoutWidget);
     QVBoxLayout* findLayout = new QVBoxLayout(findLayoutWidget);
 
@@ -140,7 +141,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
                 auto task = [this](Worker* worker)
                 {
                     worker->progress("Getting the files amount");
-                    size_t amount = GetFilesAmount("tmp");
+                    size_t amount = GetFilesAmount(TMP_PATH);
                     worker->progressMax(amount / DROP_COUNT);
 
                     finder.BuildNodes(worker);

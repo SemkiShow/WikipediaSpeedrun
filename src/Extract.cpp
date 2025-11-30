@@ -6,13 +6,6 @@
 #include <fstream>
 #include <set>
 
-#define MAX_FILENAME 255
-
-// #define PRINT_SKIPPED_FILES
-#ifdef PRINT_SKIPPED_FILES
-#include <iostream>
-#endif
-
 size_t GetFilesAmount(const fs::path& path)
 {
     size_t output = 0;

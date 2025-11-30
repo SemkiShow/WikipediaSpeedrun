@@ -4,6 +4,7 @@
 
 #pragma once
 
+#include "Constants.hpp"
 #include "Worker.hpp"
 #include <QStringList>
 #include <filesystem>
@@ -14,7 +15,7 @@ namespace fs = std::filesystem;
 class Finder
 {
   public:
-    void BuildNodes(Worker* worker, const fs::path& parsedDatasetPath = "tmp");
+    void BuildNodes(Worker* worker, const fs::path& parsedDatasetPath = TMP_PATH);
     std::vector<std::string> FindShortestPath(const std::string& start, const std::string& end);
 
     QStringList nodeLinks;
