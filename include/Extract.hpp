@@ -4,7 +4,9 @@
 
 #pragma once
 
+#include "Worker.hpp"
 #include <filesystem>
 namespace fs = std::filesystem;
 
-void ExtractLinks(const fs::path& path, const fs::path& targetPath = "tmp");
+size_t GetFilesAmount(const fs::path& path);
+void ExtractLinks(Worker* worker, const fs::path& path, const fs::path& targetPath = "tmp");

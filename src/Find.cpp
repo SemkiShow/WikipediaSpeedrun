@@ -8,19 +8,24 @@
 #include <iostream>
 #include <queue>
 
-Finder::Finder(const fs::path& parsedDatasetPath)
+void Finder::BuildNodes(Worker* worker, const fs::path& parsedDatasetPath)
 {
     datasetPath = parsedDatasetPath;
-    FindNodes(datasetPath);
 
-    for (auto& link : nodes)
+    nodeIds = {};
+    idNodes = {};
+    nodes = {};
+    FindNodes(worker, datasetPath);
+
+    nodeLinks.clear();
+    for (auto& link: nodes)
     {
         nodeLinks << QString::fromStdString(idNodes[link.first]);
     }
     nodeLinks.sort();
 }
 
-void Finder::FindNodes(const fs::path& path)
+void Finder::FindNodes(Worker* worker, const fs::path& path)
 {
     if (!fs::exists(path))
     {
@@ -33,26 +38,27 @@ void Finder::FindNodes(const fs::path& path)
         {
             if (subpath.is_directory())
             {
-                FindNodes(subpath);
+                FindNodes(worker,subpath);
             }
             else
             {
-                AddNodes(subpath.path().stem(), path);
+                AddNodes(worker,path, subpath.path().filename());
             }
         }
     }
     else
     {
-        AddNodes(path, path);
+        AddNodes(worker,path, path);
     }
 }
 
-void Finder::AddNodes(const std::string& name, const fs::path& path)
+void Finder::AddNodes(Worker* worker, const fs::path& path, const std::string& name)
 {
+    worker->SendProgress("Adding node " + QString::fromStdString(name), DROP_COUNT);
     std::ifstream file(path / name);
     if (!file)
     {
-        std::cout << "Failed to open file " << path / name << "!\n";
+        std::cout << "Failed to open file " << path << ' ' << name << "!\n";
         return;
     }
     if (nodeIds.find(name) == nodeIds.end())

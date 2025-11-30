@@ -4,14 +4,45 @@
 
 #include "Extract.hpp"
 #include <fstream>
-#include <iostream>
 #include <set>
 
 #define MAX_FILENAME 255
 
-void ExtractLinksHTML(const fs::path& filePath, const fs::path& targetPath)
+// #define PRINT_SKIPPED_FILES
+#ifdef PRINT_SKIPPED_FILES
+#include <iostream>
+#endif
+
+size_t GetFilesAmount(const fs::path& path)
 {
-    std::cout << "Extracting links from file " << filePath.string() << '\n';
+    size_t output = 0;
+    if (fs::is_directory(path))
+    {
+        for (auto& subpath: fs::directory_iterator(path))
+        {
+            if (subpath.is_directory())
+            {
+                output += GetFilesAmount(subpath);
+            }
+            else
+            {
+                if (subpath.path().stem().string().size() > MAX_FILENAME) continue;
+                output++;
+            }
+        }
+        return output;
+    }
+    else
+    {
+        return 1;
+    }
+}
+
+void ExtractLinksHTML(Worker* worker, const fs::path& filePath, const fs::path& targetPath)
+{
+    // std::cout << "Extracting links from file " << filePath.string() << '\n';
+    worker->SendProgress("Extracting links from file " + QString::fromStdString(filePath.string()),
+                         DROP_COUNT);
     std::ifstream inFile(filePath);
     std::string buf, contents;
     while (std::getline(inFile, buf))
@@ -52,7 +83,9 @@ void ExtractLinksHTML(const fs::path& filePath, const fs::path& targetPath)
         std::string link = (std::string)tag.substr(start, end - start);
         if (link.size() > MAX_FILENAME)
         {
+#ifdef PRINT_SKIPPED_FILES
             std::cout << "Skipping link " << link << "because the file name is too long\n";
+#endif
             pos = tagEnd;
             continue;
         }
@@ -70,7 +103,7 @@ void ExtractLinksHTML(const fs::path& filePath, const fs::path& targetPath)
     outFile.close();
 }
 
-void ExtractLinks(const fs::path& path, const fs::path& targetPath)
+void ExtractLinks(Worker* worker, const fs::path& path, const fs::path& targetPath)
 {
     if (!fs::exists(targetPath)) fs::create_directories(targetPath);
     if (fs::is_directory(path))
@@ -79,22 +112,24 @@ void ExtractLinks(const fs::path& path, const fs::path& targetPath)
         {
             if (subpath.is_directory())
             {
-                ExtractLinks(subpath, targetPath / subpath.path().stem());
+                ExtractLinks(worker, subpath, targetPath / subpath.path().stem());
             }
             else
             {
                 if (subpath.path().stem().string().size() > MAX_FILENAME)
                 {
+#ifdef PRINT_SKIPPED_FILES
                     std::cout << "Skipping file " << subpath.path().stem().string().size()
                               << "because the file name is too long\n";
+#endif
                     continue;
                 }
-                ExtractLinksHTML(subpath, targetPath);
+                ExtractLinksHTML(worker, subpath, targetPath);
             }
         }
     }
     else
     {
-        ExtractLinksHTML(path, targetPath);
+        ExtractLinksHTML(worker, path, targetPath);
     }
 }

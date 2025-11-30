@@ -12,40 +12,12 @@
 #include <QMainWindow>
 #include <QPushButton>
 
-class Worker : public QObject
-{
-    Q_OBJECT
-  public:
-    using Task = std::function<void()>;
-    explicit Worker(Task task) : task_(std::move(task)) {}
-
-  signals:
-    void finished();
-    void error(QString);
-
-  public slots:
-    void run()
-    {
-        try
-        {
-            task_();
-            emit finished();
-        }
-        catch (const std::exception& e)
-        {
-            emit error(e.what());
-        }
-    }
-
-  private:
-    Task task_;
-};
-
 class ComboWidget : public QWidget
 {
-  public:
+  private:
     QComboBox* combo;
 
+  public:
     ComboWidget(const QString& name, const QStringList& items = {})
     {
         QHBoxLayout* layout = new QHBoxLayout(this);
@@ -72,6 +44,8 @@ class ComboWidget : public QWidget
         completer->setCaseSensitivity(Qt::CaseInsensitive);
         combo->setCompleter(completer);
     }
+
+    QString GetText() { return combo->currentText(); }
 };
 
 class MainWindow : public QMainWindow
@@ -83,9 +57,11 @@ class MainWindow : public QMainWindow
   private:
     QString datasetPath;
     QLabel* datasetLabel;
+    Finder finder;
     QPushButton* parseDatasetButton;
     QWidget* findLayoutWidget;
-    Finder finder;
+    QPushButton* buildGraphButton;
     ComboWidget* startCombo;
     ComboWidget* endCombo;
+    QPushButton* shortestPathButton;
 };

@@ -4,8 +4,9 @@
 
 #pragma once
 
-#include <filesystem>
+#include "Worker.hpp"
 #include <QStringList>
+#include <filesystem>
 #include <unordered_map>
 #include <vector>
 namespace fs = std::filesystem;
@@ -13,7 +14,7 @@ namespace fs = std::filesystem;
 class Finder
 {
   public:
-    Finder(const fs::path& parsedDatasetPath = "tmp");
+    void BuildNodes(Worker* worker, const fs::path& parsedDatasetPath = "tmp");
     std::vector<std::string> FindShortestPath(const std::string& start, const std::string& end);
 
     QStringList nodeLinks;
@@ -24,6 +25,6 @@ class Finder
     std::unordered_map<int, std::string> idNodes;
     std::unordered_map<int, std::vector<int>> nodes;
 
-    void FindNodes(const fs::path& path);
-    void AddNodes(const std::string& name, const fs::path& path);
+    void FindNodes(Worker* worker, const fs::path& path);
+    void AddNodes(Worker* worker, const fs::path& path, const std::string& name);
 };

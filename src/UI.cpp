@@ -7,9 +7,37 @@
 #include <QFileDialog>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QProgressBar>
 #include <QPushButton>
+#include <QThread>
 #include <QVBoxLayout>
 #include <iostream>
+
+class ProgressWidget : public QWidget
+{
+  private:
+    QProgressBar* progress;
+    QLabel* label;
+
+  public:
+    ProgressWidget(const QString& name = "")
+    {
+        QVBoxLayout* layout = new QVBoxLayout(this);
+
+        progress = new QProgressBar();
+        layout->addWidget(progress);
+
+        label = new QLabel(name);
+        label->setMaximumWidth(750);
+        layout->addWidget(label);
+    }
+
+    void SetLabel(const QString& name) { label->setText(name); }
+
+    void IncreaseValue(int delta = 1) { progress->setValue(progress->value() + delta); }
+
+    void SetMax(int value) { progress->setMaximum(value); }
+};
 
 MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 {
@@ -20,7 +48,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     setCentralWidget(central);
 
     QVBoxLayout* layout = new QVBoxLayout(central);
-    // layout->setAlignment(Qt::AlignTop);
 
     QVBoxLayout* datasetLayout = new QVBoxLayout();
     datasetLayout->setAlignment(Qt::AlignTop);
@@ -39,27 +66,52 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
             {
                 QString dir =
                     QFileDialog::getExistingDirectory(this, "Select a folder", QDir::homePath());
-                std::cout << "Selected " << dir.toStdString() << '\n';
                 datasetPath = dir;
                 datasetLabel->setText(datasetPath);
                 parseDatasetButton->setVisible(true);
             });
     datasetSelectionLayout->addWidget(datasetButton);
 
+    ProgressWidget* datasetProgressBar = new ProgressWidget();
+    datasetProgressBar->setVisible(false);
+    datasetLayout->addWidget(datasetProgressBar);
+
     parseDatasetButton = new QPushButton("Parse dataset");
     connect(parseDatasetButton, &QPushButton::clicked, this,
-            [this]()
+            [this, datasetProgressBar]()
             {
-                if (!datasetPath.isEmpty())
+                if (datasetPath.isEmpty()) return;
+
+                datasetProgressBar->setVisible(true);
+                parseDatasetButton->setVisible(false);
+                findLayoutWidget->setVisible(false);
+
+                auto task = [this](Worker* worker)
                 {
+                    worker->progress("Getting the files amount");
                     if (fs::exists("tmp")) fs::remove_all("tmp");
-                    ExtractLinks(datasetPath.toStdString());
-                    finder = {};
-                    startCombo->UpdateItems(finder.nodeLinks);
-                    endCombo->UpdateItems(finder.nodeLinks);
-                    parseDatasetButton->setVisible(false);
+                    size_t amount = GetFilesAmount(datasetPath.toStdString());
+                    worker->progressMax(amount / DROP_COUNT);
+
+                    ExtractLinks(worker, datasetPath.toStdString());
+                };
+
+                auto onProgress = [datasetProgressBar](const QString& message)
+                {
+                    datasetProgressBar->SetLabel(message);
+                    datasetProgressBar->IncreaseValue();
+                };
+
+                auto onProgressMax = [datasetProgressBar](int value)
+                { datasetProgressBar->SetMax(value); };
+
+                auto onFinished = [this, datasetProgressBar]()
+                {
                     findLayoutWidget->setVisible(true);
-                }
+                    datasetProgressBar->setVisible(false);
+                };
+
+                RunWorker(this, task, onProgress, onProgressMax, onFinished);
             });
     parseDatasetButton->setVisible(false);
     datasetLayout->addWidget(parseDatasetButton);
@@ -74,22 +126,66 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     separator->setFrameShadow(QFrame::Sunken);
     findLayout->addWidget(separator);
 
+    ProgressWidget* graphProgressBar = new ProgressWidget();
+    graphProgressBar->setVisible(false);
+    findLayout->addWidget(graphProgressBar);
+
+    buildGraphButton = new QPushButton("Build graph");
+    connect(buildGraphButton, &QPushButton::clicked, this,
+            [this, graphProgressBar]()
+            {
+                graphProgressBar->setVisible(true);
+                buildGraphButton->setVisible(false);
+
+                auto task = [this](Worker* worker)
+                {
+                    worker->progress("Getting the files amount");
+                    size_t amount = GetFilesAmount("tmp");
+                    worker->progressMax(amount / DROP_COUNT);
+
+                    finder.BuildNodes(worker);
+                };
+
+                auto onProgress = [graphProgressBar](const QString& message)
+                {
+                    graphProgressBar->SetLabel(message);
+                    graphProgressBar->IncreaseValue();
+                };
+
+                auto onProgressMax = [graphProgressBar](int value)
+                { graphProgressBar->SetMax(value); };
+
+                auto onFinished = [this, graphProgressBar]()
+                {
+                    startCombo->UpdateItems(finder.nodeLinks);
+                    endCombo->UpdateItems(finder.nodeLinks);
+                    startCombo->setVisible(true);
+                    endCombo->setVisible(true);
+                    shortestPathButton->setVisible(true);
+                    graphProgressBar->setVisible(false);
+                };
+
+                RunWorker(this, task, onProgress, onProgressMax, onFinished);
+            });
+    findLayout->addWidget(buildGraphButton);
+
     startCombo = new ComboWidget("start page", finder.nodeLinks);
+    startCombo->setVisible(false);
     findLayout->addWidget(startCombo);
 
     endCombo = new ComboWidget("end page", finder.nodeLinks);
+    endCombo->setVisible(false);
     findLayout->addWidget(endCombo);
 
     QLabel* pathLabel = new QLabel();
     findLayout->addWidget(pathLabel);
 
-    QPushButton* shortestPathButton = new QPushButton("Find shortest path");
+    shortestPathButton = new QPushButton("Find shortest path");
     connect(shortestPathButton, &QPushButton::clicked, this,
             [this, pathLabel]()
             {
-                const auto& shortestPath =
-                    finder.FindShortestPath(startCombo->combo->currentText().toStdString(),
-                                            endCombo->combo->currentText().toStdString());
+                const auto& shortestPath = finder.FindShortestPath(
+                    startCombo->GetText().toStdString(), endCombo->GetText().toStdString());
 
                 QString pathString;
                 for (size_t i = 0; i < shortestPath.size(); i++)
@@ -102,5 +198,6 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
 
                 pathLabel->setText(pathString);
             });
+    shortestPathButton->setVisible(false);
     findLayout->addWidget(shortestPathButton);
 }
