@@ -38,17 +38,17 @@ void Finder::FindNodes(Worker* worker, const fs::path& path)
         {
             if (subpath.is_directory())
             {
-                FindNodes(worker,subpath);
+                FindNodes(worker, subpath);
             }
             else
             {
-                AddNodes(worker,path, subpath.path().filename());
+                AddNodes(worker, path, subpath.path().filename().string());
             }
         }
     }
     else
     {
-        AddNodes(worker,path, path);
+        AddNodes(worker, path, path.string());
     }
 }
 

@@ -10,6 +10,7 @@ A program for finding the shortest link path between two Wikipedia articles
 
 ## How to build
 
+1. Install Qt6
 1. Run
 ```
 chmod +x run.sh
