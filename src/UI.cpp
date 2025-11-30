@@ -80,6 +80,10 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
                 auto onFinished = [this, datasetProgressBar]()
                 {
                     findLayoutWidget->setVisible(true);
+                    buildGraphButton->setVisible(true);
+                    startCombo->setVisible(false);
+                    endCombo->setVisible(false);
+                    shortestPathButton->setVisible(false);
                     datasetProgressBar->setVisible(false);
                 };
 
