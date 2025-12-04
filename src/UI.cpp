@@ -57,6 +57,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
                 datasetProgressBar->setVisible(true);
                 parseDatasetButton->setVisible(false);
                 findLayoutWidget->setVisible(false);
+                pathLabel->setText("");
 
                 auto task = [this](Worker* worker)
                 {
@@ -112,6 +113,7 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
             {
                 graphProgressBar->setVisible(true);
                 buildGraphButton->setVisible(false);
+                pathLabel->setText("");
 
                 auto task = [this](Worker* worker)
                 {
@@ -155,12 +157,12 @@ MainWindow::MainWindow(QWidget* parent) : QMainWindow(parent)
     endCombo->setVisible(false);
     findLayout->addWidget(endCombo);
 
-    QLabel* pathLabel = new QLabel();
+    pathLabel = new QLabel();
     findLayout->addWidget(pathLabel);
 
     shortestPathButton = new QPushButton("Find shortest path");
     connect(shortestPathButton, &QPushButton::clicked, this,
-            [this, pathLabel]()
+            [this]()
             {
                 const auto& shortestPath = finder.FindShortestPath(
                     startCombo->GetText().toStdString(), endCombo->GetText().toStdString());

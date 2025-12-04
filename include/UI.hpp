@@ -91,5 +91,6 @@ class MainWindow : public QMainWindow
     QPushButton* buildGraphButton;
     ComboWidget* startCombo;
     ComboWidget* endCombo;
+    QLabel* pathLabel;
     QPushButton* shortestPathButton;
 };
